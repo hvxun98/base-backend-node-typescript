@@ -1,21 +1,49 @@
-import { Request, Response, NextFunction } from 'express'
 import { checkSchema } from 'express-validator'
-import { HTTP_STATUS } from '~/constants/httpStatusCode'
 import { USER_MESSAGES } from '~/constants/messages'
-import { ErrorWithStatus } from '~/models/Errors'
+import databaseService from '~/services/db.services'
 import usersService from '~/services/users.services'
+import { hashPassword } from '~/utils/crypto'
 
-export const loginValidator = (req: Request, res: Response, next: NextFunction) => {
-  const { email, password } = req.body
+export const loginValidator = checkSchema({
+  email: {
+    isEmail: {
+      errorMessage: USER_MESSAGES.EMAIL_IS_INVALID
+    },
+    trim: true,
+    custom: {
+      options: async (value, { req }) => {
+        const user = await databaseService.users.findOne({ email: value, password: hashPassword(req.body.password) })
 
-  if (!email || !password) {
-    return res.status(400).json({
-      error: 'Missing email or password'
-    })
+        if (user === null) throw new Error(USER_MESSAGES.USER_OR_PASSWORD_IS_INCORRECT)
+
+        req.user = user
+        return true
+      }
+    }
+  },
+  password: {
+    notEmpty: { errorMessage: USER_MESSAGES.PASSWORD_IS_REQUIRED },
+    isString: { errorMessage: USER_MESSAGES.PASSWORD_MUST_BE_A_STRING },
+    isLength: {
+      options: {
+        min: 6,
+        max: 20
+      },
+      errorMessage: USER_MESSAGES.PASSWORD_MUST_BE_FROM_6_TO_20
+    },
+    trim: true,
+    isStrongPassword: {
+      options: {
+        minLength: 6,
+        minLowercase: 1,
+        minUppercase: 1,
+        minNumbers: 1,
+        minSymbols: 1
+      },
+      errorMessage: USER_MESSAGES.PASSWORD_MUST_BR_STRONG
+    }
   }
-
-  next()
-}
+})
 
 export const registerValidator = checkSchema({
   name: {
@@ -31,15 +59,6 @@ export const registerValidator = checkSchema({
     trim: true
   },
   email: {
-    notEmpty: {
-      errorMessage: USER_MESSAGES.EMAIL_IS_INVALID
-    },
-    isLength: {
-      options: {
-        min: 1,
-        max: 100
-      }
-    },
     isEmail: {
       errorMessage: USER_MESSAGES.EMAIL_IS_INVALID
     },
@@ -77,7 +96,7 @@ export const registerValidator = checkSchema({
     }
   },
   confirm_password: {
-    notEmpty: {errorMessage: USER_MESSAGES.PASSWORD_IS_REQUIRED},
+    notEmpty: { errorMessage: USER_MESSAGES.PASSWORD_IS_REQUIRED },
     isString: true,
     trim: true,
     custom: {
