@@ -22,5 +22,6 @@ export const USER_MESSAGES = {
   LOGOUT_SUCCESS: 'Logout successfully',
   EMAIL_VERIFY_TOKEN_IS_REQUIRED: 'Email verify token is required',
   EMAIL_ALREADY_VERIFIED: 'Email already verified before',
-  EMAIL_VERIFIED: 'Email is verified'
+  EMAIL_VERIFIED: 'Email is verified',
+  RESEND_VERIFY_EMAIL_SUCCESS: 'Resend verify email success'
 } as const

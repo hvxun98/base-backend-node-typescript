@@ -1,14 +1,15 @@
 import { Router } from 'express'
-import { loginController, logoutController, registerController, verifyEmailTokenController } from '~/controllers/users.controller'
+import { loginController, logoutController, registerController, resendEmailController, verifyEmailTokenController } from '~/controllers/users.controller'
 import {
   accessTokenValidator,
   emailVerifyTokenValidator,
   loginValidator,
   refreshTokenValidator,
-  registerValidator
+  registerValidator,  
 } from '~/middlewares/users.middlewares'
 import { wrapRequestHandler } from '~/utils/handler'
 import { validate } from '~/utils/validation'
+
 const usersRouter = Router()
 
 /**
@@ -51,5 +52,16 @@ usersRouter.post(
   '/email-verify',
   validate(emailVerifyTokenValidator),
   wrapRequestHandler(verifyEmailTokenController)
+)
+
+/**
+ * Description: resend verify email
+ * Path: /resend-verify-email
+ * Method: POST
+ */
+usersRouter.post(
+  '/resend-verify-email',
+  validate(accessTokenValidator),
+  wrapRequestHandler(resendEmailController)
 )
 export default usersRouter
